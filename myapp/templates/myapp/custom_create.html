@@ -1,0 +1,105 @@
+{% extends 'myapp/base.html' %}
+{% block content %}
+<div class="row">
+  <div class="col-md-8 offset-md-2"><br>
+    <h2 class="text-center">Custom Url Shortner</h2><br>
+    <form action="{% url 'create' %}" method="post" class="container-fluid" >
+      {% csrf_token %}
+    <div class="input-group">
+      <span class="input-group-text" id="basic-addon1">url</span>
+      <input type="text" class="form-control" name="link" placeholder="https://www.google.com/long_url" aria-label="Username" id="link" aria-describedby="basic-addon1">
+    </div>
+    <small style="color:red;" id="alert" ></small>
+    <br>
+    <div class="input-group">
+      <span class="input-group-text">Domain/</span>
+      <input type="text" name="custom_uid" id="custom_uid" placeholder="Custom_Url" class="form-control">
+      <input type="submit" value="Submit" class="btn btn-primary" id="BTN">
+    </div>
+    </form>
+    <br>
+    <div id="ans"></div>
+  </div>
+</div>
+
+<script>
+
+  const btn = document.querySelector('#BTN');
+  const alert = document.getElementById('alert');
+  const middleToken = document.querySelector('input[name=csrfmiddlewaretoken]').value;
+
+  // Regular expression for validating urls
+  const isValidUrl = urlString => {
+	  	var urlPattern = new RegExp('^(https?:\\/\\/)?'+ // validate protocol
+	    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // validate domain name
+	    '((\\d{1,3}\\.){3}\\d{1,3}))'+ // validate OR ip (v4) address
+	    '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // validate port and path
+	    '(\\?[;&a-z\\d%_.~+=-]*)?'+ // validate query string
+	    '(\\#[-a-z\\d_]*)?$','i'); // validate fragment locator
+	  return !!urlPattern.test(urlString);
+	}
+  
+  async function getResponse(input,custom_uid, middleToken) {
+    console.log(middleToken);
+    console.log(input);
+    const data = new FormData();
+    data.append('link', input);
+    data.append('custom_uid', custom_uid);
+    const response = await fetch("{% url 'custom_create_url' %}", {
+                    method: 'post',
+                    body: data,
+                    headers: {'X-CSRFToken': middleToken},
+                    mode: 'same-origin'
+                  });
+        
+    if (!response.ok) {
+      const message = `An error has occured: ${response.status}`;
+      if(message){
+          document.querySelector('#ans').insertAdjacentHTML('beforeEnd', `<p class="input-group-text bg-white">${message}</p>`);
+        }
+      throw new Error(message);
+    }
+    const text = await response.text();
+    const ans = document.querySelector('#ans');
+    const ansinside = document.querySelector('#ans > .input-group');
+    if(ansinside){
+      ansinside.remove();
+    }
+    ans.insertAdjacentHTML('beforeEnd', `
+    <div class="input-group">
+      <span class="input-group-text">Domain/</span>
+        <div class="input-group-text bg-white" id="myDiv">${text}</div>
+        <button class="btn btn-secondary" id="myCopyBTN" onclick="copyContent()">Copy</button></div>
+    </div>
+    `);
+  }
+
+  btn.addEventListener('click', (event) => {
+    event.preventDefault();
+    let link = document.getElementById('link').value;
+    let custom_uid = document.querySelector('#custom_uid').value;
+    if(isValidUrl(link)){
+      if(alert.innerText == 'Url not valid'){ 
+        alert.remove(); 
+      }
+      getResponse(link,custom_uid, middleToken);
+      
+    }else{
+      alert.innerText = `Url not valid`;
+    }
+    
+  });
+
+  const copyContent = async () => {
+    const txt = document.querySelector('#myDiv').innerHTML;
+    try {
+      await navigator.clipboard.writeText(txt);
+      document.querySelector('#myCopyBTN').innerText = 'Copied';
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
+  }
+    
+</script>
+
+{% endblock content %}

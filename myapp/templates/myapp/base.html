@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{% static 'myapp/css/bootstrap.min.css' %}">
+  <style>
+    body{
+      background-color: rgb(216, 215, 214);
+    }
+  </style>
+  <title>{% block title  %}URL Shortener {% endblock title %}</title>
+</head>
+<body>
+
+  {% include 'myapp/navbar.html' %}
+
+    {% block content %}
+
+    {% endblock content %}
+
+  <script src="{% static 'myapp/js/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>
